@@ -1,0 +1,174 @@
+<?php
+error_reporting(0);
+require_once 'Classes/PHPExcel/IOFactory.php';
+$url = "https://store-t0676dlrio.mybigcommerce.com/content/modifier/modifier.xlsx";
+$dest = "./modifier.xlsx";
+$raw = file_get_contents($url);
+file_put_contents($dest, $raw);
+$excelObject = PHPExcel_IOFactory::load('./modifier.xlsx');
+$getSheet = $excelObject->getActiveSheet()->toArray(null);
+$storehash = 't0676dlrio';
+error_reporting(0);
+$data = array();
+array_splice($getSheet,0,1);
+$data = $getSheet;
+
+//data to pass on BC
+$result = array();
+
+
+$option_values = array();
+$label_splited = array();
+
+//if have + then option was set to default
+$default_flag = '+';
+
+
+
+foreach($data as $key => $val){
+      $product_id   = $val[0];
+      $type         = $val[+1];
+      $required     = $val[+2];
+      $display_name = $val[+3];
+      $label        = $val[+4];
+      $rules        = $val[+5];
+      $value_data   = $val[+6]; //use for swatch option
+      
+      $adjusters    = array();
+      //check column two type in xlsx
+
+         $label_arr = explode(';',$label);
+         $rules_arr = explode(';',$rules);
+         //extract label
+
+         foreach($label_arr as $label_key => $label_val){   
+            
+                  //if string contains + then the option is set to default
+                        if(strpos($label_val,$default_flag)){
+                                //default option goes here
+                                
+                                $option_values[$label_key] = array(
+                                        "label" => rtrim($label_val,$default_flag),
+                                        "is_default" => TRUE,
+                                        "value_data" => get_swatch_rules($value_data,rtrim($label_val,$default_flag))  == 'image_url' ? array('image_url'=> get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : (get_swatch_rules($value_data,rtrim($label_val,$default_flag)) == 'product_id' ? array('product_id'=>get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : get_swatch_rules($value_data,rtrim($label_val,$default_flag))),
+                                        "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr)
+                                );             
+                        }else{
+                                //non-default option
+                                $option_values[$label_key] = array(
+                                        "label" => $label_val,
+                                        "is_default" => FALSE,
+                                        "value_data" => get_swatch_rules($value_data,rtrim($label_val,$default_flag))  == 'image_url' ? array('image_url'=> get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : (get_swatch_rules($value_data,rtrim($label_val,$default_flag)) == 'product_id' ? array('product_id'=>get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : get_swatch_rules($value_data,rtrim($label_val,$default_flag))),
+                                        "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr)
+                                );
+                        }
+                     
+        
+         }
+        
+         //this result will be pass on BC json format
+         $result[] = array(
+                  'display_name' => $display_name,
+                          'type' => $type,
+                      'required' => $required,
+                 'option_values' => $option_values     
+         );
+         //reset the option values to reuse when loop
+         unset($option_values);
+        
+      
+}
+
+
+
+//functions to callback in loop
+//get the string inside bracket
+function getword_inside_bracket($haystack){
+         $a = substr($haystack,strpos($haystack,'[')+1,strlen($haystack));
+         $e = substr($a,0,strpos($a,']'));
+         return $e;
+} 
+function get_rules($data){
+        return substr($data,strpos($data,']')+1);
+}
+function get_swatch_rules($value_data,$val){
+        $arr = explode(";",$value_data);
+        $key = '';
+        foreach($arr as $key => $value){ 
+               $name = getword_inside_bracket($value);
+                
+               if($name == $val){
+                       //get property name of value_data
+                       $rule = substr($value,strpos($value,']')+1);
+                       //check if image_url or colors  and set to max character to 9 only starting from 0 index
+                       $rule_name  = substr($rule,0,10);
+                       if(strpos($rule_name,'colors') !== false){  
+                              $rule_filter = substr($value,strpos($value,'=')+1); 
+                              $key = array('colors'=> explode(',',$rule_filter));
+                       }else if(strpos($rule_name,'image_url') !== false){
+                              $key = 'image_url';
+                       }else if(strpos($rule_name,'product_id') !== false){
+                               $key = 'product_id';
+                       }
+                       return $key;
+
+               }
+        }
+ 
+}
+//get only image_url this is shit duplicate function 
+function get_swatch_rules_image($value_data,$val){
+        $arr = explode(";",$value_data);
+        $key = '';
+        foreach($arr as $key => $value){ 
+               $name = getword_inside_bracket($value);
+                
+               if($name == $val){
+                       //get property name of value_data
+                       $rule = substr($value,strpos($value,']')+1);
+                       //check if image_url or colors  and set to max character to 9 only starting from 0 index
+                       $rule_name  = substr($rule,0,10);
+                       if(strpos($rule_name,'image_url') !== false){
+                               $rule_filter = substr($value,strpos($value,'=')+1); 
+                               $key = $rule_filter;
+                       }else if(strpos($rule_name,'product_id') !== false){
+                                $rule_filter = substr($value,strpos($value,'=')+1); 
+                                $key = $rule_filter;
+                       }
+                       return $key;
+
+               }
+        }
+}
+
+function adjusters($op_name,$rules_arr){
+        foreach($rules_arr as $key => $val){
+                $word = getword_inside_bracket($val);
+                $splitted_word = explode(',',$word);
+                foreach($splitted_word as $k => $v){
+                        if($v === $op_name){
+                                $rules_value =  get_rules($val);
+                                $r = explode(',',$rules_value);
+                                $dd = array();
+                                foreach($r as $rk => $vr){
+                                     $f = substr($vr,0,strpos($vr,'='));
+                                    if($f == 'price'){
+                                        $dd['price'] = array('adjuster' => 'relative','adjuster_value' => substr($vr,strpos($vr,'=')+1));
+                                    }else if($f == 'weight'){
+                                        $dd['weight'] = array('adjuster' => 'relative','adjuster_value' => substr($vr,strpos($vr,'=')+1));
+                                    }
+                                }
+                                return $dd;     
+                        }
+                }
+        }
+}
+
+
+
+
+
+
+echo '<pre>';
+// print_r($result);
+echo json_encode($result);
