@@ -32,7 +32,9 @@ foreach($data as $key => $val){
       $display_name = $val[+3];
       $label        = $val[+4];
       $rules        = $val[+5];
-      $value_data   = $val[+6]; //use for swatch option
+      $value_data   = $val[+6]; //use for swatch option,picklist
+      $config       = $val[+7]; //option (others) in BC dropdown option in modifiier
+      $config_property = $val[+8];  //option (others) in BC dropdown option in modifiier
       
       $adjusters    = array();
       //check column two type in xlsx
@@ -41,8 +43,9 @@ foreach($data as $key => $val){
          $rules_arr = explode(';',$rules);
          //extract label
 
+
+
          foreach($label_arr as $label_key => $label_val){   
-            
                   //if string contains + then the option is set to default
                         if(strpos($label_val,$default_flag)){
                                 //default option goes here
@@ -62,21 +65,29 @@ foreach($data as $key => $val){
                                         "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr)
                                 );
                         }
-                     
-        
          }
-        
+         //get config
+         if($config){
+                 $a = explode(';',$config_property);
+                 foreach($a as $k => $v){
+                        $keyc   = substr($v,0,strpos($v,'='));
+                        $valuec = substr($v,strpos($v,'=')+1); 
+                        $data_config[] = array($keyc =>is_numeric($valuec) ? (int)$valuec : ($valuec == "true" ? true : ($valuec == "false" ? false : $valuec)));
+                                    
+                 }
+                 
+         }
          //this result will be pass on BC json format
          $result[] = array(
                   'display_name' => $display_name,
                           'type' => $type,
                       'required' => $required,
-                 'option_values' => $option_values     
+                        'config' => array_filter(call_user_func_array("array_merge", $data_config)),
+                 'option_values' => ($config != null ? null : $option_values)   
          );
          //reset the option values to reuse when loop
          unset($option_values);
-        
-      
+         unset($d);
 }
 
 
@@ -163,9 +174,6 @@ function adjusters($op_name,$rules_arr){
                 }
         }
 }
-
-
-
 
 
 
