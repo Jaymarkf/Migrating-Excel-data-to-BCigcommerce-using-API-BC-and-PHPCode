@@ -1,3 +1,27 @@
+<html>
+        <head>
+<style>
+.warnings{
+        background-color:#f5730d;
+        width:100%;
+        display:block;
+        height:20px;
+        color:white;
+        margin-bottom:5px;
+        text-align: center;
+}
+
+.success{
+        background-color:chartreuse;
+        color:black;
+        display:block;
+        height:20px;
+        margin-bottom:10px;
+        text-align:center;
+}
+</style>
+</head>
+<body>
 <?php
 // error_reporting(0);
 require_once 'Classes/PHPExcel/IOFactory.php';
@@ -63,7 +87,7 @@ foreach($data as $key => $val){
                                 $option_values[$label_key] = array(
                                         "label" => $label_val,
                                         "is_default" => FALSE,
-                                        "value_data" => get_swatch_rules($value_data,rtrim($label_val,$default_flag))  == 'image_url' ? array('image_url'=> get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : (get_swatch_rules($value_data,rtrim($label_val,$default_flag)) == 'product_id' ? array('product_id'=>get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) :get_swatch_rules($value_data,rtrim($label_val,$default_flag))),
+                                        "value_data" => get_swatch_rules($value_data,rtrim($label_val,$default_flag))  == 'image_url' ? array('image_url'=> get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : (get_swatch_rules($value_data,rtrim($label_val,$default_flag)) == 'product_id' ? array('product_id'=>get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : get_swatch_rules($value_data,rtrim($label_val,$default_flag))),
                                         "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr) == null ? array() : array(adjusters(rtrim($label_val,$default_flag),$rules_arr))
                                 );
                         }
@@ -74,26 +98,32 @@ foreach($data as $key => $val){
                  foreach($a as $k => $v){
                         $keyc   = substr($v,0,strpos($v,'='));
                         $valuec = substr($v,strpos($v,'=')+1); 
+
                         $data_config[] = array($keyc =>is_numeric($valuec) ? (int)$valuec : ($valuec == "true" ? true : ($valuec == "false" ? false : $valuec)));
-                                    
+                        if($keyc == "file_types_supported" || $keyc == "file_types_other"){  
+                                $data_config[] = array($keyc => explode(',',$valuec));
+                        }       
                  }
+
+
+
                  
          }
+       
          //this result will be pass on BC json format
          $result[] = array(
                   'display_name' => $display_name,
                           'type' => $type,
                       'required' => $required,
                         'config' => array_filter(call_user_func_array("array_merge", $data_config))  == null ? array() :  array_filter(call_user_func_array("array_merge", $data_config)),
-                 'option_values' => $type == "text" ? array() : ($type == "numbers_only_text" ? array() : ($type == "date" ? array() : ($type == "multi_line_text" ? array() : $option_values)))
+                 'option_values' => $type == "text" ? array() : ($type == "numbers_only_text" ? array() : ($type == "date" ? array() : ($type == "multi_line_text" ? array() : ($type == "checkbox" ? array() : ($type == "file" ? array(): $option_values)))))
          );
          //reset the option values to reuse when loop
+       
          unset($data_config);
          unset($option_values);
          unset($d);
 }
-
-
 
 //functions to callback in loop
 //get the string inside bracket
@@ -184,11 +214,21 @@ function adjusters($op_name,$rules_arr){
         }
 }
 
-// echo json_encode($result,JSON_UNESCAPED_SLASHES);
+
+
+
+// foreach($result as $temp => $r){
+//     if($temp == 11){
+//         echo json_encode($r,JSON_UNESCAPED_SLASHES);
+//         die();
+//     }    
+// }
+
+// echo json_encode($result);
 // die();
 foreach($result as $g => $v){
-//       echo print_r($v);
-//       die();
+
+
         $headers = array(
         'X-Auth-Client: iyhwjdyol0uamlpheeb1juma64pfkdj',
         'X-Auth-Token: em16zkoebf6o9ioq57h4kic88vprfr',
@@ -201,9 +241,24 @@ foreach($result as $g => $v){
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch,CURLOPT_POST, 1);
         curl_setopt($ch,CURLOPT_POSTFIELDS,json_encode($v,JSON_UNESCAPED_SLASHES));
-        echo '<pre>';
         $response = curl_exec($ch);
-        echo $response;
+        $data_result = json_decode($response,true);
+        if($data_result['status'] == 422 || $data_result['status'] == "422"){
+               echo '<div class="warnings">Modifer is already exist in excel row '. ($g + 1);
+               echo ' Please double check and execute this script again';
+               echo '</div>';
+        }else if($data_result['data']){
+                echo "<div class='success'>";
+                echo 'Excel row ' . ($g + 1);
+                echo ' was successfully uploaded in store';
+                echo '</div>';
+        }else{
+                echo '<pre>';
+                echo $response;
+        }
 
 
 }
+?>
+</body>
+</html>
