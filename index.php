@@ -80,7 +80,7 @@ foreach($data as $key => $val){
                                         "label" => rtrim($label_val,$default_flag),
                                         "is_default" => TRUE,
                                         "value_data" => get_swatch_rules($value_data,rtrim($label_val,$default_flag))  == 'image_url' ? array('image_url'=> get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : (get_swatch_rules($value_data,rtrim($label_val,$default_flag)) == 'product_id' ? array('product_id'=>get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : get_swatch_rules($value_data,rtrim($label_val,$default_flag))),
-                                        "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr) == null ? array() : array(adjusters(rtrim($label_val,$default_flag),$rules_arr))
+                                        "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr) == null ? array() : adjusters(rtrim($label_val,$default_flag),$rules_arr)
                                 );             
                         }else{
                                 //non-default option
@@ -88,7 +88,7 @@ foreach($data as $key => $val){
                                         "label" => $label_val,
                                         "is_default" => FALSE,
                                         "value_data" => get_swatch_rules($value_data,rtrim($label_val,$default_flag))  == 'image_url' ? array('image_url'=> get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : (get_swatch_rules($value_data,rtrim($label_val,$default_flag)) == 'product_id' ? array('product_id'=>get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : get_swatch_rules($value_data,rtrim($label_val,$default_flag))),
-                                        "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr) == null ? array() : array(adjusters(rtrim($label_val,$default_flag),$rules_arr))
+                                        "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr) == null ? array() : adjusters(rtrim($label_val,$default_flag),$rules_arr)
                                 );
                         }
          }
@@ -116,7 +116,7 @@ foreach($data as $key => $val){
                           'type' => $type,
                       'required' => $required,
                         'config' => array_filter(call_user_func_array("array_merge", $data_config))  == null ? array() :  array_filter(call_user_func_array("array_merge", $data_config)),
-                 'option_values' => $type == "text" ? array() : ($type == "numbers_only_text" ? array() : ($type == "date" ? array() : ($type == "multi_line_text" ? array() : ($type == "checkbox" ? array() : ($type == "file" ? array(): $option_values)))))
+                 'option_values' => $type == "text" ? array() : ($type == "numbers_only_text" ? array() : ($type == "date" ? array() : ($type == "multi_line_text" ? array() : ($type == "checkbox" ? array() : ($type == "file" ? array() : $option_values)))))
          );
          //reset the option values to reuse when loop
        
@@ -227,7 +227,6 @@ function adjusters($op_name,$rules_arr){
 // echo json_encode($result);
 // die();
 foreach($result as $g => $v){
-
 
         $headers = array(
         'X-Auth-Client: iyhwjdyol0uamlpheeb1juma64pfkdj',
