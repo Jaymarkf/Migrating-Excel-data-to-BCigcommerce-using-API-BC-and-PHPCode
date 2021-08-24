@@ -1,5 +1,5 @@
 <?php
-error_reporting(0);
+// error_reporting(0);
 require_once 'Classes/PHPExcel/IOFactory.php';
 $url = "https://store-t0676dlrio.mybigcommerce.com/content/modifier/modifier.xlsx";
 $dest = "./modifier.xlsx";
@@ -12,6 +12,7 @@ error_reporting(0);
 $data = array();
 array_splice($getSheet,0,1);
 $data = $getSheet;
+$prod_id = array();
 
 //data to pass on BC
 $result = array();
@@ -27,6 +28,7 @@ $default_flag = '+';
 
 foreach($data as $key => $val){
       $product_id   = $val[0];
+      $prod_id[] = $product_id;
       $type         = $val[+1];
       $required     = $val[+2];
       $display_name = $val[+3];
@@ -54,15 +56,15 @@ foreach($data as $key => $val){
                                         "label" => rtrim($label_val,$default_flag),
                                         "is_default" => TRUE,
                                         "value_data" => get_swatch_rules($value_data,rtrim($label_val,$default_flag))  == 'image_url' ? array('image_url'=> get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : (get_swatch_rules($value_data,rtrim($label_val,$default_flag)) == 'product_id' ? array('product_id'=>get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : get_swatch_rules($value_data,rtrim($label_val,$default_flag))),
-                                        "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr)
+                                        "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr) == null ? array() : array(adjusters(rtrim($label_val,$default_flag),$rules_arr))
                                 );             
                         }else{
                                 //non-default option
                                 $option_values[$label_key] = array(
                                         "label" => $label_val,
                                         "is_default" => FALSE,
-                                        "value_data" => get_swatch_rules($value_data,rtrim($label_val,$default_flag))  == 'image_url' ? array('image_url'=> get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : (get_swatch_rules($value_data,rtrim($label_val,$default_flag)) == 'product_id' ? array('product_id'=>get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : get_swatch_rules($value_data,rtrim($label_val,$default_flag))),
-                                        "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr)
+                                        "value_data" => get_swatch_rules($value_data,rtrim($label_val,$default_flag))  == 'image_url' ? array('image_url'=> get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : (get_swatch_rules($value_data,rtrim($label_val,$default_flag)) == 'product_id' ? array('product_id'=>get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) :get_swatch_rules($value_data,rtrim($label_val,$default_flag))),
+                                        "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr) == null ? array() : array(adjusters(rtrim($label_val,$default_flag),$rules_arr))
                                 );
                         }
          }
@@ -82,10 +84,11 @@ foreach($data as $key => $val){
                   'display_name' => $display_name,
                           'type' => $type,
                       'required' => $required,
-                        'config' => array_filter(call_user_func_array("array_merge", $data_config)),
-                 'option_values' => ($config != null ? null : $option_values)   
+                        'config' => array_filter(call_user_func_array("array_merge", $data_config))  == null ? array() :  array_filter(call_user_func_array("array_merge", $data_config)),
+                 'option_values' => $type == "text" ? array() : ($type == "numbers_only_text" ? array() : ($type == "date" ? array() : ($type == "multi_line_text" ? array() : $option_values)))
          );
          //reset the option values to reuse when loop
+         unset($data_config);
          unset($option_values);
          unset($d);
 }
@@ -115,7 +118,8 @@ function get_swatch_rules($value_data,$val){
                        $rule_name  = substr($rule,0,10);
                        if(strpos($rule_name,'colors') !== false){  
                               $rule_filter = substr($value,strpos($value,'=')+1); 
-                              $key = array('colors'=> explode(',',$rule_filter));
+                              $ex = explode(',',$rule_filter);
+                              $key = array('colors'=>$ex);
                        }else if(strpos($rule_name,'image_url') !== false){
                               $key = 'image_url';
                        }else if(strpos($rule_name,'product_id') !== false){
@@ -127,6 +131,11 @@ function get_swatch_rules($value_data,$val){
         }
  
 }
+
+
+
+
+
 //get only image_url this is shit duplicate function 
 function get_swatch_rules_image($value_data,$val){
         $arr = explode(";",$value_data);
@@ -175,8 +184,26 @@ function adjusters($op_name,$rules_arr){
         }
 }
 
+// echo json_encode($result,JSON_UNESCAPED_SLASHES);
+// die();
+foreach($result as $g => $v){
+//       echo print_r($v);
+//       die();
+        $headers = array(
+        'X-Auth-Client: iyhwjdyol0uamlpheeb1juma64pfkdj',
+        'X-Auth-Token: em16zkoebf6o9ioq57h4kic88vprfr',
+        'Content-Type: application/json'
+        );
+        $url = 'https://api.bigcommerce.com/stores/' .$storehash. '/v3/catalog/products/'.$prod_id[$g].'/modifiers';
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch,CURLOPT_POST, 1);
+        curl_setopt($ch,CURLOPT_POSTFIELDS,json_encode($v,JSON_UNESCAPED_SLASHES));
+        echo '<pre>';
+        $response = curl_exec($ch);
+        echo $response;
 
 
-echo '<pre>';
-// print_r($result);
-echo json_encode($result);
+}
