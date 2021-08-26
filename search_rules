@@ -1,0 +1,15 @@
+<?php
+$product_id = $argv[1];
+$storehash = 't0676dlrio';
+$headers = array(
+        'X-Auth-Client: iyhwjdyol0uamlpheeb1juma64pfkdj',
+        'X-Auth-Token: em16zkoebf6o9ioq57h4kic88vprfr',
+        'Content-Type: application/json'
+        );
+$url = 'https://api.bigcommerce.com/stores/' .$storehash. '/v3/catalog/products/'.$product_id.'/modifiers';
+$curl = curl_init($url);
+curl_setopt($curl, CURLOPT_URL, $url);
+curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+$resp = curl_exec($curl);
+$resp = json_decode($resp,true);

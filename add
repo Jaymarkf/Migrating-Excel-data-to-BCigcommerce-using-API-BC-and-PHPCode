@@ -1,11 +1,11 @@
 <?php
 // error_reporting(0);
 require_once 'Classes/PHPExcel/IOFactory.php';
-$url = "https://store-t0676dlrio.mybigcommerce.com/content/modifier/update_modifier.xlsx";
-$dest = "./update_modifier.xlsx";
+$url = "https://store-t0676dlrio.mybigcommerce.com/content/modifier/modifier.xlsx";
+$dest = "./modifier.xlsx";
 $raw = file_get_contents($url);
 file_put_contents($dest, $raw);
-$excelObject = PHPExcel_IOFactory::load('./update_modifier.xlsx');
+$excelObject = PHPExcel_IOFactory::load('./modifier.xlsx');
 $getSheet = $excelObject->getActiveSheet()->toArray(null);
 $storehash = 't0676dlrio';
 error_reporting(0);
@@ -13,7 +13,7 @@ $data = array();
 array_splice($getSheet,0,1);
 $data = $getSheet;
 $prod_id = array();
-$mod_id = array();
+
 //data to pass on BC
 $result = array();
 
@@ -29,17 +29,14 @@ $default_flag = '+';
 foreach($data as $key => $val){
       $product_id   = $val[0];
       $prod_id[] = $product_id;
-      $mod_id[] = $val[+1];
-      $type         = $val[+2];
-      $required     = $val[+3];
-      $display_name = $val[+4];
-      $label        = $val[+5];
-      $rules        = $val[+6];
-      $value_data   = $val[+7]; //use for swatch option,picklist
-      $config       = $val[+8]; //option (others) in BC dropdown option in modifiier
-      $config_property = $val[+9];  //option (others) in BC dropdown option in modifiier
-      $option_id = $val[+10];
-      
+      $type         = $val[+1];
+      $required     = $val[+2];
+      $display_name = $val[+3];
+      $label        = $val[+4];
+      $rules        = $val[+5];
+      $value_data   = $val[+6]; //use for swatch option,picklist
+      $config       = $val[+7]; //option (others) in BC dropdown option in modifiier
+      $config_property = $val[+8];  //option (others) in BC dropdown option in modifiier
       
       $adjusters    = array();
       //check column two type in xlsx
@@ -47,42 +44,29 @@ foreach($data as $key => $val){
          $label_arr = explode(';',$label);
          $rules_arr = explode(';',$rules);
          //extract label
-       $option_idd = explode(',',$option_id);
+
 
 
          foreach($label_arr as $label_key => $label_val){   
                   //if string contains + then the option is set to default
                         if(strpos($label_val,$default_flag)){
                                 //default option goes here
+                                
                                 $option_values[$label_key] = array(
                                         "label" => rtrim($label_val,$default_flag),
                                         "is_default" => TRUE,
                                         "value_data" => get_swatch_rules($value_data,rtrim($label_val,$default_flag))  == 'image_url' ? array('image_url'=> get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : (get_swatch_rules($value_data,rtrim($label_val,$default_flag)) == 'product_id' ? array('product_id'=>get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : get_swatch_rules($value_data,rtrim($label_val,$default_flag))),
                                         "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr) == null ? array() : adjusters(rtrim($label_val,$default_flag),$rules_arr)
-                                );
-                                if($option_idd[$label_key] == "" || $option_idd[$label_key] == false || $option_idd[$label_key] == null){
-                                        unset($option_values[$label_key]["id"]);                             
-                                }else{
-                                        $option_values[$label_key]["id"] = (int)$option_idd[$label_key];
-                                }               
+                                );             
                         }else{
                                 //non-default option
-                                           
-                             
-                                $option_values[$label_key] = array(                       
+                                $option_values[$label_key] = array(
                                         "label" => $label_val,
                                         "is_default" => FALSE,
                                         "value_data" => get_swatch_rules($value_data,rtrim($label_val,$default_flag))  == 'image_url' ? array('image_url'=> get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : (get_swatch_rules($value_data,rtrim($label_val,$default_flag)) == 'product_id' ? array('product_id'=>get_swatch_rules_image($value_data,rtrim($label_val,$default_flag))) : get_swatch_rules($value_data,rtrim($label_val,$default_flag))),
                                         "adjusters" => adjusters(rtrim($label_val,$default_flag),$rules_arr) == null ? array() : adjusters(rtrim($label_val,$default_flag),$rules_arr)
                                 );
-                                if($option_idd[$label_key] == "" || $option_idd[$label_key] == false || $option_idd[$label_key] == null){
-                                        unset($option_values[$label_key]["id"]);                             
-                                }else{
-                                        $option_values[$label_key]["id"] = (int)$option_idd[$label_key];
-                                }       
-
                         }
-                  
          }
          //get config
          if($config){
@@ -96,6 +80,9 @@ foreach($data as $key => $val){
                                 $data_config[] = array($keyc => explode(',',$valuec));
                         }       
                  }
+
+
+
                  
          }
        
@@ -108,16 +95,12 @@ foreach($data as $key => $val){
                  'option_values' => $type == "text" ? array() : ($type == "numbers_only_text" ? array() : ($type == "date" ? array() : ($type == "multi_line_text" ? array() : ($type == "checkbox" ? array() : ($type == "file" ? array() : $option_values)))))
          );
          //reset the option values to reuse when loop
-         
+       
          unset($data_config);
          unset($option_values);
          unset($d);
 }
 
-
-// echo json_encode($result);
-// die();
-// echo '<pre>';
 //functions to callback in loop
 //get the string inside bracket
 function getword_inside_bracket($haystack){
@@ -313,40 +296,40 @@ function show_status($done, $total, $size=30) {
 //     }    
 // }
 
-
+// echo json_encode($result);
+// die();
 foreach($result as $g => $v){
-$curl = curl_init();
-curl_setopt_array($curl, array(
-  CURLOPT_URL => 'https://api.bigcommerce.com/stores/t0676dlrio/v3/catalog/products/'.$prod_id[$g].'/modifiers'. '/'. $mod_id[$g],
-  CURLOPT_RETURNTRANSFER => true,
-  CURLOPT_ENCODING => '',
-  CURLOPT_MAXREDIRS => 10,
-  CURLOPT_TIMEOUT => 0,
-  CURLOPT_FOLLOWLOCATION => true,
-  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-  CURLOPT_CUSTOMREQUEST => 'PUT',
-  CURLOPT_POSTFIELDS =>json_encode($v),
-  CURLOPT_HTTPHEADER => array(
-    'X-Auth-Client: iyhwjdyol0uamlpheeb1juma64pfkdj',
-    'X-Auth-Token: em16zkoebf6o9ioq57h4kic88vprfr',
-    'Content-Type: application/json'
-  ),
-));
-$response = curl_exec($curl);
-curl_close($curl);
+      
+        $headers = array(
+        'X-Auth-Client: iyhwjdyol0uamlpheeb1juma64pfkdj',
+        'X-Auth-Token: em16zkoebf6o9ioq57h4kic88vprfr',
+        'Content-Type: application/json'
+        );
+        $url = 'https://api.bigcommerce.com/stores/' .$storehash. '/v3/catalog/products/'.$prod_id[$g].'/modifiers';
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch,CURLOPT_POST, 1);
+        curl_setopt($ch,CURLOPT_POSTFIELDS,json_encode($v,JSON_UNESCAPED_SLASHES));
+        $response = curl_exec($ch);
+        $data_result = json_decode($response,true);
+        get_status($data_result,$g);
+        show_status($g+1,count($result),30);
+ 
 
-get_status(json_decode($response,true),$g);
 
 }
 
 
 function get_status($code,$row){
         if($code['status'] == 422 || $code['status'] == "422"){
-                echo "\n\e[1;31;40m".$code['title']. " Excel row -> " .($row+1)." \e[0m \r\n";
+                echo "\n\e[1;31;40m"."Modifier is already exist in row:".($row+1)." at Excel. \e[0m \r\n";
         }else if($code['data']){
-                echo "\n\e[1;36;40m"."Excel row:".($row+1)." was successfully updated in store \e[0m \r\n";
-        }else{ 
-                echo print_r($code);    
+                echo "\n\e[1;36;40m"."Excel row:".($row+1)." was successfully uploaded in store \e[0m \r\n";
+        }else{
+              
         }
+
 }
 ?>

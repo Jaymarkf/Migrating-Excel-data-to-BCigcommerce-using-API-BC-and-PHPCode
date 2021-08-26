@@ -1,0 +1,42 @@
+<?php
+$product_id = $argv[1];
+$storehash = 't0676dlrio';
+$headers = array(
+        'X-Auth-Client: iyhwjdyol0uamlpheeb1juma64pfkdj',
+        'X-Auth-Token: em16zkoebf6o9ioq57h4kic88vprfr',
+        'Content-Type: application/json'
+        );
+$url = 'https://api.bigcommerce.com/stores/' .$storehash. '/v3/catalog/products/'.$product_id.'/modifiers';
+$curl = curl_init($url);
+curl_setopt($curl, CURLOPT_URL, $url);
+curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
+curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+$resp = curl_exec($curl);
+$resp = json_decode($resp,true);
+
+if(count($resp['data']) == 0 ){     
+         echo "\n\e[1;31;40m \n\n\n\t\t\tNO PRODUCT FOUND IN THIS ID\n\n\n \e[0m \r\n";
+}else{
+         foreach($resp['data'] as $key => $val){
+                  echo "modifier_id = ".$val['id']. "\n";
+                  echo "display_name = ".$val['display_name']. "\n";
+                  echo "required = ".$val['required']. "\n";
+                  echo "type = ". $val['type']."\n";
+                  if($val['option_values']){
+                           echo "option_ids{\n";
+                           foreach($val['option_values'] as $ko => $vo){
+                                    echo " => ".$vo['id']."\n";
+                           }
+                           echo "}\n";
+                           echo "======================================================\n\n";
+                  }else{
+                            echo "======================================================\n\n";
+                  }
+
+         }
+
+
+
+
+         echo "\n\e[1;36;40m \n\n\n\t\t\t [MODIFIER COUNT] = ".count($resp['data'])." \n\n\n \e[0m \r\n";
+}

@@ -1,0 +1,101 @@
+<?php
+require_once 'Classes/PHPExcel/IOFactory.php';
+$url = "https://store-t0676dlrio.mybigcommerce.com/content/modifier/delete_modifier.xlsx";
+$dest = "./delete_modifier.xlsx";
+$raw = file_get_contents($url);
+file_put_contents($dest, $raw);
+$excelObject = PHPExcel_IOFactory::load('./delete_modifier.xlsx');
+$getSheet = $excelObject->getActiveSheet()->toArray(null);
+$storehash = 't0676dlrio';
+error_reporting(0);
+$data = array();
+array_splice($getSheet,0,1);
+$data = $getSheet;
+$prod_id = array();
+$mod_id = array();
+
+foreach($data as $key => $val){
+      $prod_id[] = $val[0];
+      $mod_id[] = $val[+1];
+    
+
+}
+
+function show_status($done, $total, $size=30,$status="") {
+ 
+    static $start_time;
+ 
+    // if we go over our bound, just ignore it
+    if($done > $total) return;
+ 
+    if(empty($start_time)) $start_time=time();
+    $now = time();
+ 
+    $perc=(double)($done/$total);
+ 
+    $bar=floor($perc*$size);
+ 
+    $status_bar="\r[";
+    $status_bar.=str_repeat("=", $bar);
+    if($bar<$size){
+        $status_bar.=">";
+        $status_bar.=str_repeat(" ", $size-$bar);
+    } else {
+        $status_bar.="=";
+    }
+ 
+    $disp=number_format($perc*100, 0);
+ 
+    $status_bar.="] $disp%  $done/$total";
+ 
+    $rate = ($now-$start_time)/$done;
+    $left = $total - $done;
+    $eta = round($rate * $left, 2);
+ 
+    $elapsed = $now - $start_time;
+ 
+    $status_bar.= " remaining: ".number_format($eta)." sec.  elapsed: ".number_format($elapsed)." sec.";
+ 
+    echo "$status_bar  ";
+
+    flush();
+ 
+    // when done, send a newline
+    if($done == $total) {
+          
+         echo "\nDELETING MODIFIER COMPLETE!..\n";
+    }
+}
+ 
+
+
+
+
+foreach($prod_id as $g => $v){
+$curl = curl_init();
+curl_setopt_array($curl, array(
+  CURLOPT_URL => 'https://api.bigcommerce.com/stores/t0676dlrio/v2/products/'.$v.'/rules'. '/'. $mod_id[$g],
+  CURLOPT_RETURNTRANSFER => true,
+  CURLOPT_ENCODING => '',
+  CURLOPT_MAXREDIRS => 10,
+  CURLOPT_TIMEOUT => 0,
+  CURLOPT_FOLLOWLOCATION => true,
+  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+  CURLOPT_CUSTOMREQUEST => 'DELETE',
+  CURLOPT_HTTPHEADER => array(
+    'X-Auth-Client: iyhwjdyol0uamlpheeb1juma64pfkdj',
+    'X-Auth-Token: em16zkoebf6o9ioq57h4kic88vprfr',
+    'Content-Type: application/json'
+  ),
+));
+$response = curl_exec($curl);
+$json = json_encode(simplexml_load_string($response));
+$array = json_decode($json,true);
+
+echo print_r($array);
+curl_close($curl);
+// show_status($g+1,count($prod_id),"");
+
+}
+
+?>
