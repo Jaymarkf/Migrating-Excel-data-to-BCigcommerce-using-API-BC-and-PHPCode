@@ -1,10 +1,10 @@
 <?php
 require_once 'Classes/PHPExcel/IOFactory.php';
-$url = "https://store-t0676dlrio.mybigcommerce.com/content/modifier/delete_modifier.xlsx";
-$dest = "./delete_modifier.xlsx";
+$url = "https://store-t0676dlrio.mybigcommerce.com/content/modifier/delete_rule.xlsx";
+$dest = "./delete_rule.xlsx";
 $raw = file_get_contents($url);
 file_put_contents($dest, $raw);
-$excelObject = PHPExcel_IOFactory::load('./delete_modifier.xlsx');
+$excelObject = PHPExcel_IOFactory::load('./delete_rule.xlsx');
 $getSheet = $excelObject->getActiveSheet()->toArray(null);
 $storehash = 't0676dlrio';
 error_reporting(0);
@@ -63,7 +63,7 @@ function show_status($done, $total, $size=30,$status="") {
     // when done, send a newline
     if($done == $total) {
           
-         echo "\nDELETING MODIFIER COMPLETE!..\n";
+         echo "\nDELETING RULES COMPLETE!..\n";
     }
 }
  
@@ -91,10 +91,8 @@ curl_setopt_array($curl, array(
 $response = curl_exec($curl);
 $json = json_encode(simplexml_load_string($response));
 $array = json_decode($json,true);
-
-echo print_r($array);
 curl_close($curl);
-// show_status($g+1,count($prod_id),"");
+show_status($g+1,count($prod_id),"");
 
 }
 

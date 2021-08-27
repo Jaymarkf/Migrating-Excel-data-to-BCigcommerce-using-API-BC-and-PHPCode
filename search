@@ -14,6 +14,22 @@ curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 $resp = curl_exec($curl);
 $resp = json_decode($resp,true);
 
+$z = array(
+        'X-Auth-Client: iyhwjdyol0uamlpheeb1juma64pfkdj',
+        'X-Auth-Token: em16zkoebf6o9ioq57h4kic88vprfr',
+        'Content-Type: application/json'
+        );
+$url_rule = 'https://api.bigcommerce.com/stores/' .$storehash. '/v2/products/'.$product_id.'/rules';
+$curl_rule = curl_init($url_rule);
+curl_setopt($curl_rule, CURLOPT_URL, $url_rule);
+curl_setopt($curl_rule, CURLOPT_HTTPHEADER, $z);
+curl_setopt($curl_rule, CURLOPT_RETURNTRANSFER, true);
+
+$response = curl_exec($curl_rule);
+$json = json_encode(simplexml_load_string($response));
+$array = json_decode($json,true);  //rules ID result
+
+
 if(count($resp['data']) == 0 ){     
          echo "\n\e[1;31;40m \n\n\n\t\t\tNO PRODUCT FOUND IN THIS ID\n\n\n \e[0m \r\n";
 }else{
@@ -23,9 +39,11 @@ if(count($resp['data']) == 0 ){
                   echo "required = ".$val['required']. "\n";
                   echo "type = ". $val['type']."\n";
                   if($val['option_values']){
-                           echo "option_ids{\n";
                            foreach($val['option_values'] as $ko => $vo){
-                                    echo " => ".$vo['id']."\n";
+                                
+                                echo "\t=> ".$vo['id'].",\e[1;33;40m label_name \e[0m => " .$vo['label'].get_rule_id($vo['id'],$array)."\n";        
+                                
+                                  
                            }
                            echo "}\n";
                            echo "======================================================\n\n";
@@ -39,4 +57,12 @@ if(count($resp['data']) == 0 ){
 
 
          echo "\n\e[1;36;40m \n\n\n\t\t\t [MODIFIER COUNT] = ".count($resp['data'])." \n\n\n \e[0m \r\n";
+}
+
+function get_rule_id($compare,$rules){
+        foreach($rules['rule'] as $key => $val){
+                if($val['conditions']['condition']['option_value_id'] == $compare){
+                        return ", \e[1;34;40m rule_id \e[0m => " .$val['id'];
+                }
+        }
 }
