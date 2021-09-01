@@ -34,10 +34,11 @@ if(count($resp['data']) == 0 ){
          echo "\n\e[1;31;40m \n\n\n\t\t\tNO PRODUCT FOUND IN THIS ID\n\n\n \e[0m \r\n";
 }else{
          foreach($resp['data'] as $key => $val){
-                  echo "modifier_id = ".$val['id']. "\n";
-                  echo "display_name = ".$val['display_name']. "\n";
-                  echo "required = ".$val['required']. "\n";
-                  echo "type = ". $val['type']."\n";
+                  echo "\e[1;33;40mmodifier_id\e[0m = ".$val['id']. "\n";
+                  echo "\e[1;33;40mdisplay_name\e[0m = ".$val['display_name']. "\n";
+                  echo "\e[1;33;40mrequired\e[0m = ".$val['required']. "\n";
+                  echo "\e[1;33;40mtype\e[0m = ". $val['type']."\n";
+                  echo "\e[1;33;40moption_ids\e[0m => \n{\t\n";
                   if($val['option_values']){
                            foreach($val['option_values'] as $ko => $vo){
                                 
@@ -45,7 +46,7 @@ if(count($resp['data']) == 0 ){
                                 
                                   
                            }
-                           echo "}\n";
+                           echo "\t}\n";
                            echo "======================================================\n\n";
                   }else{
                             echo "======================================================\n\n";
