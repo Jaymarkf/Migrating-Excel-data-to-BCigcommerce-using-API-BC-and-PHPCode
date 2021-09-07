@@ -345,8 +345,9 @@ function get_status($code,$row){
                 echo "\n\e[1;31;40m".$code['title']. " Excel row -> " .($row+1)." \e[0m \r\n";
         }else if($code['data']){
                 echo "\n\e[1;36;40m"."Excel row:".($row+1)." was successfully updated in store \e[0m \r\n";
-        }else{ 
-                echo print_r($code);    
+        }else if($code['status'] == 404){
+                 $code['modifier_id'] = $row;
+                print_r($code);
         }
 }
 ?>

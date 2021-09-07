@@ -1,0 +1,59 @@
+<?php
+require_once 'Classes/PHPExcel/IOFactory.php';
+$url = "https://store-t0676dlrio.mybigcommerce.com/content/related_products/related-products.xlsx";
+$dest = "./related-products.xlsx";
+$raw = file_get_contents($url);
+file_put_contents($dest, $raw);
+$excelObject = PHPExcel_IOFactory::load('./related-products.xlsx');
+$getSheet = $excelObject->getActiveSheet()->toArray(null);
+$storehash = 't0676dlrio';
+error_reporting(0);
+$data = array();
+array_splice($getSheet,0,1);
+$data = $getSheet;
+$prod_id = array();
+$mod_id = array();
+//data to pass on BC
+$result = array();
+
+$option_values = array();
+$label_splited = array();
+
+//if have + then option was set to default
+$default_flag = '+';
+
+foreach($data as $key => $val){
+         $product_id   = $val[0];
+         $related_product = $val[+1];
+         $r_id = explode(',',$related_product);
+         $data = array(
+                  'related_products' => $r_id
+         );
+         $curl = curl_init();
+         curl_setopt_array($curl, array(
+         CURLOPT_URL => 'https://api.bigcommerce.com/stores/t0676dlrio/v3/catalog/products/'.$product_id,
+         CURLOPT_RETURNTRANSFER => true,
+         CURLOPT_ENCODING => '',
+         CURLOPT_MAXREDIRS => 10,
+         CURLOPT_TIMEOUT => 0,
+         CURLOPT_FOLLOWLOCATION => true,
+         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+         CURLOPT_CUSTOMREQUEST => 'PUT',
+         CURLOPT_POSTFIELDS =>json_encode($data),
+         CURLOPT_HTTPHEADER => array(
+         'X-Auth-Client: iyhwjdyol0uamlpheeb1juma64pfkdj',
+         'X-Auth-Token: em16zkoebf6o9ioq57h4kic88vprfr',
+         'Content-Type: application/json'
+         ),
+         ));
+         $response = curl_exec($curl);
+         $decode = json_decode($response,true);
+         if(isset($decode['status'])){
+                  echo "excel rows ". ($key + 1). " has an error please check\n";
+                  print_r($decode);
+         }else{
+                  echo "excel rows ".($key + 1). " successfully uploaded\n";
+         }
+         curl_close($curl);
+         unset($data);
+}
