@@ -1,12 +1,12 @@
 <?php
 require_once 'Classes/PHPExcel/IOFactory.php';
-$url = "https://store-t0676dlrio.mybigcommerce.com/content/related_products/related-products.xlsx";
-$dest = "./related-products.xlsx";
+$url = "https://store-bek4r4rsz5.mybigcommerce.com/content/related_products/LG-related-10-11-2021.xlsx";
+$dest = "./LG-related-10-11-2021.xlsx";
 $raw = file_get_contents($url);
 file_put_contents($dest, $raw);
-$excelObject = PHPExcel_IOFactory::load('./related-products.xlsx');
+$excelObject = PHPExcel_IOFactory::load('./LG-related-10-11-2021.xlsx');
 $getSheet = $excelObject->getActiveSheet()->toArray(null);
-$storehash = 't0676dlrio';
+$storehash = 'bek4r4rsz5';
 error_reporting(0);
 $data = array();
 array_splice($getSheet,0,1);
@@ -31,7 +31,7 @@ foreach($data as $key => $val){
          );
          $curl = curl_init();
          curl_setopt_array($curl, array(
-         CURLOPT_URL => 'https://api.bigcommerce.com/stores/t0676dlrio/v3/catalog/products/'.$product_id,
+         CURLOPT_URL => 'https://api.bigcommerce.com/stores/bek4r4rsz5/v3/catalog/products/'.$product_id,
          CURLOPT_RETURNTRANSFER => true,
          CURLOPT_ENCODING => '',
          CURLOPT_MAXREDIRS => 10,
@@ -41,8 +41,8 @@ foreach($data as $key => $val){
          CURLOPT_CUSTOMREQUEST => 'PUT',
          CURLOPT_POSTFIELDS =>json_encode($data),
          CURLOPT_HTTPHEADER => array(
-         'X-Auth-Client: iyhwjdyol0uamlpheeb1juma64pfkdj',
-         'X-Auth-Token: em16zkoebf6o9ioq57h4kic88vprfr',
+         'X-Auth-Client: 133mva08llhd582zf0559jxsq5wzz6l',
+         'X-Auth-Token: 5uyeuv5un723yyy2ku3jt5d3xbxshsf',
          'Content-Type: application/json'
          ),
          ));
